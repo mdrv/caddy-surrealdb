@@ -1,0 +1,126 @@
+{
+	auto_https off
+	log {
+		level DEBUG
+	}
+}
+
+:8181 {
+	surrealdb {
+		endpoint ws://127.0.0.1:596
+		namespace caddy
+		database caddy
+		auth namespace caddy caddy
+
+		schema {
+			DEFINE TABLE OVERWRITE person SCHEMAFULL PERMISSIONS FOR select, create, update WHERE true;
+			DEFINE FIELD OVERWRITE name ON person TYPE string;
+			DEFINE FIELD OVERWRITE age ON person TYPE option<int>;
+			DEFINE FIELD OVERWRITE city ON person TYPE option<string>;
+			DEFINE FIELD OVERWRITE created_at ON person TYPE datetime DEFAULT time::now();
+			DEFINE INDEX OVERWRITE idx_person_name ON person COLUMNS name UNIQUE;
+		}
+
+		query get_person {
+			sql "SELECT * FROM type::record('person', $id)"
+			param id {
+				from path
+				type string
+			}
+			output {
+				format json
+				envelope off
+				status 200
+			}
+		}
+
+		query list_people {
+			sql "SELECT * FROM person ORDER BY created_at DESC LIMIT $limit START $offset"
+			param limit {
+				from query
+				key limit
+				type int
+				default 10
+				max 100
+			}
+			param offset {
+				from query
+				key offset
+				type int
+				default 0
+			}
+			output {
+				format json
+				envelope on
+			}
+		}
+
+		query create_person {
+			sql "CREATE type::record('person', $id) SET name = $name, age = $age, city = $city, created_at = time::now()"
+			param id {
+				from body
+				key id
+				type string
+				default "auto"
+			}
+			param name {
+				from body
+				key name
+				type string
+			}
+			param age {
+				from body
+				key age
+				type int
+			}
+			param city {
+				from body
+				key city
+				type string
+			}
+			output {
+				format json
+				status 201
+			}
+		}
+
+		query search_people {
+			sql "SELECT * FROM person WHERE name CONTAINS $q OR city CONTAINS $q LIMIT 50"
+			param q {
+				from query
+				key q
+				type string
+			}
+			output {
+				format json
+				envelope on
+			}
+		}
+
+		route GET /api/person/:id get_person
+		route GET /api/people list_people
+		route POST /api/person create_person
+		route GET /api/search search_people
+
+		live_query live_people {
+			table person
+			diff off
+			format sse
+		}
+		live_route GET /api/live/people live_people
+
+		log {
+			table _caddy_requests
+			batch_size 10
+			flush_interval 1s
+		}
+
+		heartbeat 15s
+		heartbeat_table _caddy_status
+		token_refresh 5m
+		api_path /_surreal
+		raw_sql on
+	}
+
+	file_server
+}

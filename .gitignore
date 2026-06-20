@@ -1,0 +1,16 @@
+# Compiled binary (xcaddy output)
+/caddy-surrealdb
+
+# Go build cache (when GOFLAGS points here)
+/.gocache/
+
+# Caddy runtime artifacts
+/history.txt
+*.log
+/test/*.log
+/test/*.pid
+
+# Editor / OS noise
+.DS_Store
+*.swp
+*~
