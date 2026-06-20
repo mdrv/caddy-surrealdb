@@ -36,7 +36,9 @@ all from your Caddyfile.
 ```
 
 Requires Go 1.26+ and [`xcaddy`](https://github.com/caddyserver/xcaddy). The build is
-pure-Go (no CGO) because `surrealdb.go` only depends on `gorilla/websocket`.
+pure-Go (no CGO) because `surrealdb.go` only depends on `gorilla/websocket`. The
+module pins `github.com/surrealdb/surrealdb.go v1.4.0` via `go.mod`; to test against
+a local checkout, run `SURREALDB_GO_DIR=/path/to/surrealdb.go ./build.sh`.
 
 ## Test
 

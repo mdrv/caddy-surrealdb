@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/caddyserver/caddy/v2 v2.11.4
-	github.com/surrealdb/surrealdb.go v0.0.0-00010101000000-000000000000
+	github.com/surrealdb/surrealdb.go v1.4.0
 	go.uber.org/zap v1.28.0
 )
 
@@ -154,5 +154,3 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	howett.net/plist v1.0.0 // indirect
 )
-
-replace github.com/surrealdb/surrealdb.go => /x/g/_ext/surrealdb.go
