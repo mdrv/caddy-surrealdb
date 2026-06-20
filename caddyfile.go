@@ -27,27 +27,37 @@ func parseCaddyfile(h httpcaddyfile.Helper) (caddyhttp.MiddlewareHandler, error)
 // Syntax:
 //
 //		surrealdb {
-//		  endpoint ws://127.0.0.1:596
-//		  namespace caddy
-//		  database caddy
-//		  auth { root <user> <pass> | namespace <u> <p> | database <u> <p> |
-//		         record <access> <bearer-key> | token <jwt> }
-//		  schema { <SurrealQL statements separated by ;> }
-//		  query <name> { sql `...`; sql_file <path>; param <n> {...};
-//		                 output { format json; envelope on; status 200;
-//	                         body ""; omit <col>; alias <col> <name> };
-//	                cache 30s; timeout 10s }
-//		  route <METHOD> <path> <query> { require_header <name> <val>;
-//	                                      rate_limit <n> per <dur> }
-//		  live_query <name> { table <t>; diff on|off; format sse|ws }
-//		  live_route <METHOD> <path> <live_query_name>
-//		  log { table <t>; batch_size <n>; flush_interval <dur>;
-//	         buffer_size <n>; overflow drop|block;
-//	         exclude_path <path>; omit <field> }
-//		  heartbeat <dur>; heartbeat_table <t>   # table is opt-in; default keeps user DB clean
-//		  token_refresh <dur>
-//		  api_path <path>; api_token <token>; raw_sql on|off
-//		  cors_origin <origin>
+//		endpoint ws://127.0.0.1:596
+//		namespace caddy
+//		database caddy
+//		auth root <user> <pass>            # or: namespace <u> <p> | database <u> <p>
+//		                                 #     record <access> <bearer-key> | token <jwt>
+//		schema {
+//			<SurrealQL statements separated by ;>
+//		}
+//		query <name> {
+//			sql `...`            # or sql_file <path>
+//			param <n> { from body|query|header|path|env|placeholder; key <k>; type <t>; default <v> }
+//			output { format json|csv|ndjson; envelope on|off; status <n>; body ""; omit <col>; alias <col> <name> }
+//			cache 30s; timeout 10s
+//		}
+//		route <METHOD> <path> <query> {
+//			require_header <name> <val>
+//			rate_limit <n> per <dur>
+//		}
+//		live_query <name> {
+//			table <t>; diff on|off; format sse|ws
+//		}
+//		live_route <METHOD> <path> <live_query_name>
+//		log {
+//			table <t>; batch_size <n>; flush_interval <dur>; buffer_size <n>
+//			overflow drop|block; exclude_path <path>; omit <field>
+//		}
+//		heartbeat <dur>                   # ping interval
+//		heartbeat_table <t>               # opt-in; default keeps user DB clean
+//		token_refresh <dur>               # re-sign-in threshold before JWT exp
+//		api_path <path>; api_token <token>; raw_sql on|off
+//		cors_origin <origin>
 //		}
 func (m *Middleware) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	d.Next()

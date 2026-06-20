@@ -1,0 +1,107 @@
+{
+	admin off
+	http_port 8181
+}
+
+:8181 {
+	surrealdb {
+		endpoint ws://127.0.0.1:596
+		namespace caddy
+		database caddy
+		auth namespace caddy caddy
+
+		schema {
+			DEFINE TABLE OVERWRITE todo SCHEMAFULL;
+			DEFINE FIELD OVERWRITE title      ON todo TYPE string;
+			DEFINE FIELD OVERWRITE completed  ON todo TYPE bool DEFAULT false;
+			DEFINE FIELD OVERWRITE created_at ON todo TYPE datetime DEFAULT time::now();
+			DEFINE INDEX OVERWRITE idx_todo_created ON todo COLUMNS created_at;
+		}
+
+		query list_todos {
+			sql `SELECT id, title, completed, created_at FROM todo ORDER BY created_at DESC`
+			output {
+				format json
+				envelope on
+				status 200
+			}
+		}
+
+		query get_todo {
+			sql `SELECT id, title, completed, created_at FROM type::record('todo', $id)`
+			param id {
+				from path
+				type string
+			}
+			output {
+				format json
+				status 200
+			}
+		}
+
+		query create_todo {
+			sql `CREATE type::record('todo', $id) SET title = $title, completed = $completed`
+			param id {
+				from query
+				key id
+				type string
+			}
+			param title {
+				from query
+				key title
+				type string
+			}
+			param completed {
+				from query
+				key completed
+				type bool
+				default false
+			}
+			output {
+				format json
+				status 201
+			}
+		}
+
+		query update_todo {
+			sql `UPDATE type::record('todo', $id) SET title = $title, completed = $completed RETURN AFTER`
+			param id {
+				from path
+				type string
+			}
+			param title {
+				from query
+				key title
+				type string
+			}
+			param completed {
+				from query
+				key completed
+				type bool
+				default false
+			}
+			output {
+				format json
+				status 200
+			}
+		}
+
+		query delete_todo {
+			sql `DELETE FROM type::record('todo', $id) RETURN BEFORE`
+			param id {
+				from path
+				type string
+			}
+			output {
+				format json
+				status 200
+			}
+		}
+
+		route GET /todos                  list_todos
+		route GET /todos/create           create_todo
+		route GET /todos/:id              get_todo
+		route GET /todos/:id/update       update_todo
+		route GET /todos/:id/delete       delete_todo
+	}
+}

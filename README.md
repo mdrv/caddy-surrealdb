@@ -80,23 +80,47 @@ example.com {
 
 		query get_person {
 			sql `SELECT * FROM person WHERE id = type::thing('person', $id)`
-			param id { from path, type string }
-			output { format json; envelope on; status 200 }
+		param id {
+			from path
+			type string
+		}
+		output {
+			format json
+			envelope on
+			status 200
+		}
 		}
 
 		query create_person {
 			sql `CREATE type::thing('person', $id) SET name = $name, age = $age`
-			param id   { from body, key id,   type string }
-			param name { from body, key name, type string }
-			param age  { from body, key age,  type int, default 0 }
-			output { status 201 }
+		param id {
+			from body
+			key id
+			type string
+		}
+		param name {
+			from body
+			key name
+			type string
+		}
+		param age {
+			from body
+			key age
+			type int
+			default 0
+		}
+		output {
+			status 201
+		}
 		}
 
 		route  GET    /persons/:id get_person
 		route  POST   /persons      create_person
 
 		# Live query streamed to clients at /persons/live
-		live_query  person_live { table person; diff off; format sse }
+		table person
+		diff off
+		format sse
 		live_route  GET /persons/live person_live
 
 		log {
